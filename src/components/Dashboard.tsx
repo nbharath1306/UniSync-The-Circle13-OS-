@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { SCHEDULE, TIME_SLOTS } from '@/lib/schedules';
+import { SCHEDULE, TIME_SLOTS, getStatus } from '@/lib/schedules';
 
 interface Issue {
   number: number;
@@ -9,20 +9,6 @@ interface Issue {
   url: string; // html_url
   state: string;
 }
-
-const getStatusColor = (status: string, hComp: string, lComp: string) => {
-  if (status === 'SYNC' || status === 'WAR_ROOM') return 'text-green-500';
-  if (status === 'WALK_MEETING') return 'text-yellow-500';
-  if (status === 'ASYNC' || status === 'ASYNC_WORK' || status === 'LIBRARY_GRIND' || hComp === 'FREE' || lComp === 'FREE') return 'text-blue-500';
-  if (status === 'HACKATHON_MODE') return 'text-purple-500';
-  return 'text-red-500';
-};
-
-const getStatusLabel = (status: string, hComp: string, lComp: string) => {
-  if (status) return status;
-  if (hComp === 'FREE' || lComp === 'FREE') return 'ASYNC';
-  return 'BUSY';
-};
 
 export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -67,7 +53,6 @@ export default function Dashboard() {
 
   const currentSchedule = SCHEDULE[currentDay];
   
-  let currentSlot = null;
   let activeSlotKey = null;
 
   // Simple time comparison
@@ -82,111 +67,100 @@ export default function Dashboard() {
     const endMin = getMinutes(slot.end);
     
     if (currentTotalMinutes >= startMin && currentTotalMinutes < endMin) {
-        currentSlot = slot;
         activeSlotKey = slot.start;
         break;
     }
   }
 
   const slotData = (currentSchedule && activeSlotKey) ? currentSchedule[activeSlotKey] : null;
-  const hStatus = slotData?.H || "OFFLINE";
-  const lStatus = slotData?.L || "OFFLINE";
-  const statusKey = slotData?.status || "";
-  
-  const statusLabel = getStatusLabel(statusKey, hStatus, lStatus);
-  const statusColor = getStatusColor(statusKey, hStatus, lStatus);
-  const isPulse = statusKey === 'WAR_ROOM';
+  const hSubject = slotData?.H || "OFFLINE";
+  const lSubject = slotData?.L || "OFFLINE";
+
+  const status = getStatus(hSubject, lSubject);
+  const isPulse = status.text === 'GO BUILD';
+  const isGreenH = ["Sports", "Library", "Office Hours", "Mentor", "Club Activity", "Tea Break", "Lunch", "Soft Skill Training", "FREE"].includes(hSubject) || hSubject === 'FREE';
+  const isGreenL = ["Sports", "Library", "Office Hours", "Mentor", "Club Activity", "Tea Break", "Lunch", "Soft Skill Training", "FREE"].includes(lSubject) || lSubject === 'FREE';
+
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#22c55e] font-mono p-4 flex flex-col">
-      {/* Header */}
-      <header className="border-b border-green-900 pb-4 mb-8 flex flex-col md:flex-row justify-between items-start md:items-end">
-        <div className="mb-4 md:mb-0">
-            <h1 className="text-4xl font-bold tracking-tighter">UniSync</h1>
-            <p className="text-sm opacity-70">The Circle13 Operating System</p>
-        </div>
-        <div className="text-left md:text-right w-full md:w-auto">
-            <div className="text-3xl font-bold">{timeString}</div>
-            <div className={`text-xl font-bold ${statusColor} ${isPulse ? 'animate-pulse' : ''}`}>
-               [{statusLabel}]
-            </div>
-            <div className="text-xs text-gray-500 mt-1">{currentDay}</div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#0a0a0a] text-[#22c55e] font-mono p-4 flex flex-col justify-between">
+      
+      {/* Top Bar: Giant Status Text */}
+      <div className="flex flex-col items-center justify-center pt-8 pb-4">
+          <div className="text-6xl md:text-8xl font-black tracking-tighter text-center animate-pulse">
+              {status.text}
+          </div>
+          <div className={`text-xl font-bold mt-2 px-4 py-1 border ${status.borderColor} ${status.color}`}>
+              STATUS: {status.sub}
+          </div>
+          <div className="text-gray-500 mt-4 font-bold text-2xl">
+              {timeString} | {currentDay}
+          </div>
+      </div>
 
-      {/* Main Grid */}
-      <main className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      {/* Middle: Two Cards side-by-side */}
+      <main className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-8 py-8 px-4 md:px-12">
         {/* User H Column */}
-        <div className="border border-green-900/50 p-6 bg-green-900/5 rounded-lg flex flex-col items-center justify-center">
-            <h2 className="text-xl font-bold mb-4 border-b border-green-900/30 pb-2 w-full text-center">N Bharath (4H)</h2>
+        <div className={`border-2 ${isGreenH ? 'border-green-500 bg-green-900/10' : 'border-red-900/50 bg-red-900/5'} p-8 rounded-xl flex flex-col items-center justify-center transition-all duration-300`}>
+            <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 w-full text-center text-gray-400">BHARATH (4H)</h2>
             <div className="text-center mt-4">
                 <div className="text-sm text-gray-500 mb-2">CURRENT ACTIVITY</div>
-                <div className="text-3xl font-bold text-white max-w-full break-words">{hStatus}</div>
-            </div>
-        </div>
-
-        {/* Action Center - Simplified for now, maybe show upcoming or config */}
-        <div className="border border-green-900/50 p-6 bg-green-900/5 rounded-lg flex flex-col justify-center items-center">
-            <div className="text-center">
-                <div className="text-6xl mb-4">
-                    {statusLabel === 'SYNC' ? '⚡' : 
-                     statusLabel === 'WAR_ROOM' ? '⚔️' : 
-                     statusLabel === 'BUSY' ? '🚫' : 
-                     statusLabel === 'WALK_MEETING' ? '🚶' : '🌊'}
+                <div className={`text-4xl md:text-5xl font-bold ${isGreenH ? 'text-green-400' : 'text-red-500'} max-w-full break-words`}>
+                    {hSubject}
                 </div>
-                <div className="text-xl font-bold tracking-widest">{statusLabel} MODE</div>
             </div>
-             
-             {/* Repo Config Inputs (Optional per user request "allow user to configure repo name") */}
-             <div className="mt-8 w-full">
-                <label className="text-xs text-gray-500">GITHUB_CONFIG</label>
-                <div className="flex gap-2 mt-1">
-                    <input 
-                        className="bg-black border border-green-800 text-green-500 px-2 py-1 text-xs w-1/2 focus:outline-none focus:border-green-500" 
-                        value={repoOwner} 
-                        onChange={(e) => setRepoOwner(e.target.value)} 
-                        placeholder="Owner"
-                    />
-                    <input 
-                        className="bg-black border border-green-800 text-green-500 px-2 py-1 text-xs w-1/2 focus:outline-none focus:border-green-500" 
-                        value={repoName} 
-                        onChange={(e) => setRepoName(e.target.value)} 
-                        placeholder="Repo" 
-                    />
-                </div>
-             </div>
         </div>
 
         {/* User L Column */}
-        <div className="border border-green-900/50 p-6 bg-green-900/5 rounded-lg flex flex-col items-center justify-center">
-            <h2 className="text-xl font-bold mb-4 border-b border-green-900/30 pb-2 w-full text-center">Akhil Vipin Nair (4L)</h2>
+        <div className={`border-2 ${isGreenL ? 'border-green-500 bg-green-900/10' : 'border-red-900/50 bg-red-900/5'} p-8 rounded-xl flex flex-col items-center justify-center transition-all duration-300`}>
+            <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 w-full text-center text-gray-400">AKHIL (4L)</h2>
             <div className="text-center mt-4">
                 <div className="text-sm text-gray-500 mb-2">CURRENT ACTIVITY</div>
-                <div className="text-3xl font-bold text-white max-w-full break-words">{lStatus}</div>
+                <div className={`text-4xl md:text-5xl font-bold ${isGreenL ? 'text-green-400' : 'text-red-500'} max-w-full break-words`}>
+                    {lSubject}
+                </div>
             </div>
         </div>
       </main>
 
-      {/* Footer / Agenda */}
-      <footer className="border-t border-green-900 pt-4">
-        <h3 className="text-xl font-bold mb-4 flex items-center">
+      {/* Bottom: Agenda */}
+      <footer className="border-t border-gray-800 pt-4 px-4 pb-2">
+        <h3 className="text-lg font-bold mb-2 flex items-center text-gray-400">
             <span className="mr-2">_ACTIVE_OBJECTIVES</span>
-            <span className="text-xs font-normal opacity-50">(GitHub Issues: {repoOwner}/{repoName})</span>
+            <span className="text-xs font-normal opacity-50">({repoOwner}/{repoName})</span>
         </h3>
-        <div className="bg-black border border-green-900 p-4 font-mono text-sm h-48 overflow-y-auto rounded shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+        <div className="bg-black border border-gray-800 p-4 font-mono text-sm h-48 overflow-y-auto rounded-lg">
             {issues.length > 0 ? (
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                     {issues.map((issue) => (
-                        <li key={issue.number} className="flex justify-between items-start hover:bg-green-900/20 p-1 cursor-pointer transition-colors" onClick={() => window.open(issue.url, '_blank')}>
-                            <span><span className="text-gray-500">#{issue.number}</span> {issue.title}</span>
-                            <span className="text-xs border border-green-800 px-1 rounded text-green-400">OPEN</span>
+                        <li key={issue.number} className="flex justify-between items-start hover:bg-white/5 p-2 rounded cursor-pointer transition-colors border-b border-gray-900 last:border-0" onClick={() => window.open(issue.url, '_blank')}>
+                            <span className="flex-1"><span className="text-gray-500 mr-2">#{issue.number}</span> {issue.title}</span>
+                            <span className="text-xs border border-green-800 bg-green-900/20 px-2 py-0.5 rounded text-green-400 ml-4">OPEN</span>
                         </li>
                     ))}
                 </ul>
             ) : (
-                <div className="text-gray-500 italic">No active objectives found...</div>
+                <div className="text-gray-600 italic flex items-center justify-center h-full">No active objectives found...</div>
             )}
         </div>
+        
+        {/* Hidden Config Inputs */}
+        <div className="mt-4 w-full flex justify-center opacity-20 hover:opacity-100 transition-opacity">
+            <div className="flex gap-2">
+                <input 
+                    className="bg-black border border-gray-800 text-gray-500 px-2 py-1 text-xs w-32 focus:outline-none focus:border-green-500" 
+                    value={repoOwner} 
+                    onChange={(e) => setRepoOwner(e.target.value)} 
+                    placeholder="Owner"
+                />
+                <input 
+                    className="bg-black border border-gray-800 text-gray-500 px-2 py-1 text-xs w-48 focus:outline-none focus:border-green-500" 
+                    value={repoName} 
+                    onChange={(e) => setRepoName(e.target.value)} 
+                    placeholder="Repo" 
+                />
+            </div>
+         </div>
       </footer>
     </div>
   );
