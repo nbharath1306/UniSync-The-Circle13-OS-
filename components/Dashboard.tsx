@@ -27,8 +27,8 @@ const getStatusLabel = (status: string, hComp: string, lComp: string) => {
 export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [issues, setIssues] = useState<Issue[]>([]);
-  const [repoOwner, setRepoOwner] = useState(process.env.NEXT_PUBLIC_GITHUB_USERNAME || 'vercel');
-  const [repoName, setRepoName] = useState(process.env.NEXT_PUBLIC_GITHUB_REPO || 'next.js');
+  const [repoOwner, setRepoOwner] = useState(process.env.NEXT_PUBLIC_GITHUB_USERNAME || 'nbharath1306');
+  const [repoName, setRepoName] = useState(process.env.NEXT_PUBLIC_GITHUB_REPO || 'UniSync-The-Circle13-OS--The-Circle13-OS--The-Circle13-OS--The-Circle13-OS-');
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
