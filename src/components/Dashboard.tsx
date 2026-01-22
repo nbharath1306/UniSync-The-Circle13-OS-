@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [issues, setIssues] = useState<Issue[]>([]);
   const [repoOwner, setRepoOwner] = useState(process.env.NEXT_PUBLIC_GITHUB_USERNAME || 'nbharath1306');
-  const [repoName, setRepoName] = useState(process.env.NEXT_PUBLIC_GITHUB_REPO || 'UniSync-The-Circle13-OS--The-Circle13-OS--The-Circle13-OS--The-Circle13-OS-');
+  const [repoName, setRepoName] = useState(process.env.NEXT_PUBLIC_GITHUB_REPO || 'UniSync-The-Circle13-OS-');
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -56,7 +56,7 @@ export default function Dashboard() {
         }
     };
     fetchIssues();
-  }, [repoOwner, repoName]);
+  }, [repoOwner, repoName, currentTime]); // Re-fetch occasionally? Maybe just on mount or input change
 
   // Determine current slot
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -68,7 +68,6 @@ export default function Dashboard() {
   const currentSchedule = SCHEDULE[currentDay];
   
   let currentSlot = null;
-  let nextSlot = null;
   let activeSlotKey = null;
 
   // Simple time comparison
@@ -101,12 +100,12 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#22c55e] font-mono p-4 flex flex-col">
       {/* Header */}
-      <header className="border-b border-green-900 pb-4 mb-8 flex justify-between items-end">
-        <div>
-            <h1 className="text-4xl font-bold tracking-tighter">UniSync v1.0</h1>
+      <header className="border-b border-green-900 pb-4 mb-8 flex flex-col md:flex-row justify-between items-start md:items-end">
+        <div className="mb-4 md:mb-0">
+            <h1 className="text-4xl font-bold tracking-tighter">UniSync</h1>
             <p className="text-sm opacity-70">The Circle13 Operating System</p>
         </div>
-        <div className="text-right">
+        <div className="text-left md:text-right w-full md:w-auto">
             <div className="text-3xl font-bold">{timeString}</div>
             <div className={`text-xl font-bold ${statusColor} ${isPulse ? 'animate-pulse' : ''}`}>
                [{statusLabel}]
@@ -118,11 +117,11 @@ export default function Dashboard() {
       {/* Main Grid */}
       <main className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {/* User H Column */}
-        <div className="border border-green-900/50 p-6 bg-green-900/5 rounded-lg">
-            <h2 className="text-xl font-bold mb-4 border-b border-green-900/30 pb-2">USER_H (N Bharath)</h2>
-            <div className="text-center mt-8">
+        <div className="border border-green-900/50 p-6 bg-green-900/5 rounded-lg flex flex-col items-center justify-center">
+            <h2 className="text-xl font-bold mb-4 border-b border-green-900/30 pb-2 w-full text-center">N Bharath (4H)</h2>
+            <div className="text-center mt-4">
                 <div className="text-sm text-gray-500 mb-2">CURRENT ACTIVITY</div>
-                <div className="text-3xl font-bold text-white">{hStatus}</div>
+                <div className="text-3xl font-bold text-white max-w-full break-words">{hStatus}</div>
             </div>
         </div>
 
@@ -132,7 +131,8 @@ export default function Dashboard() {
                 <div className="text-6xl mb-4">
                     {statusLabel === 'SYNC' ? '⚡' : 
                      statusLabel === 'WAR_ROOM' ? '⚔️' : 
-                     statusLabel === 'BUSY' ? '🚫' : '🌊'}
+                     statusLabel === 'BUSY' ? '🚫' : 
+                     statusLabel === 'WALK_MEETING' ? '🚶' : '🌊'}
                 </div>
                 <div className="text-xl font-bold tracking-widest">{statusLabel} MODE</div>
             </div>
@@ -142,13 +142,13 @@ export default function Dashboard() {
                 <label className="text-xs text-gray-500">GITHUB_CONFIG</label>
                 <div className="flex gap-2 mt-1">
                     <input 
-                        className="bg-black border border-green-800 text-green-500 px-2 py-1 text-xs w-1/2" 
+                        className="bg-black border border-green-800 text-green-500 px-2 py-1 text-xs w-1/2 focus:outline-none focus:border-green-500" 
                         value={repoOwner} 
                         onChange={(e) => setRepoOwner(e.target.value)} 
                         placeholder="Owner"
                     />
                     <input 
-                        className="bg-black border border-green-800 text-green-500 px-2 py-1 text-xs w-1/2" 
+                        className="bg-black border border-green-800 text-green-500 px-2 py-1 text-xs w-1/2 focus:outline-none focus:border-green-500" 
                         value={repoName} 
                         onChange={(e) => setRepoName(e.target.value)} 
                         placeholder="Repo" 
@@ -158,11 +158,11 @@ export default function Dashboard() {
         </div>
 
         {/* User L Column */}
-        <div className="border border-green-900/50 p-6 bg-green-900/5 rounded-lg">
-            <h2 className="text-xl font-bold mb-4 border-b border-green-900/30 pb-2">USER_L (Akhil Vipin Nair)</h2>
-            <div className="text-center mt-8">
+        <div className="border border-green-900/50 p-6 bg-green-900/5 rounded-lg flex flex-col items-center justify-center">
+            <h2 className="text-xl font-bold mb-4 border-b border-green-900/30 pb-2 w-full text-center">Akhil Vipin Nair (4L)</h2>
+            <div className="text-center mt-4">
                 <div className="text-sm text-gray-500 mb-2">CURRENT ACTIVITY</div>
-                <div className="text-3xl font-bold text-white">{lStatus}</div>
+                <div className="text-3xl font-bold text-white max-w-full break-words">{lStatus}</div>
             </div>
         </div>
       </main>
@@ -177,7 +177,7 @@ export default function Dashboard() {
             {issues.length > 0 ? (
                 <ul className="space-y-2">
                     {issues.map((issue) => (
-                        <li key={issue.number} className="flex justify-between items-start hover:bg-green-900/20 p-1 cursor-pointer" onClick={() => window.open(issue.url, '_blank')}>
+                        <li key={issue.number} className="flex justify-between items-start hover:bg-green-900/20 p-1 cursor-pointer transition-colors" onClick={() => window.open(issue.url, '_blank')}>
                             <span><span className="text-gray-500">#{issue.number}</span> {issue.title}</span>
                             <span className="text-xs border border-green-800 px-1 rounded text-green-400">OPEN</span>
                         </li>
