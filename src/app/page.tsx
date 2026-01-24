@@ -1,7 +1,9 @@
-import Dashboard from '@/components/Dashboard';
+import { ProtocolDashboard } from "@/components/ProtocolDashboard";
 
 export default function Home() {
   return (
-    <Dashboard />
+    <main className="min-h-screen bg-[var(--background)] scanlines">
+      <ProtocolDashboard />
+    </main>
   );
 }
