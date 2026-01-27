@@ -25,7 +25,9 @@ declare module 'next-auth/jwt' {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || process.env.NODE_ENV === 'production' 
+    ? undefined 
+    : 'dev-secret-please-change-in-production',
   providers: [
     CredentialsProvider({
       name: 'Credentials',
