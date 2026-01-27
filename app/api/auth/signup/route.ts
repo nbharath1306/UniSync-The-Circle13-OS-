@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail, createUser } from '@/lib/local-db';
 
+// Force Node.js runtime (bcrypt doesn't work in Edge Runtime)
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const { email, password, fullName, section } = await request.json();
