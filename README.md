@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Circle13 Campus Sync
 
-## Getting Started
+> 100% Free Serverless Stack - Vercel + GitHub + Vercel KV + Vercel Postgres
 
-First, run the development server:
+A real-time co-founder coordination app for campus teams. Track status, manage tasks, schedule meetings, and stay synchronized.
+
+## 🎯 Tech Stack
+
+### Frontend & Hosting
+- **Next.js 14** (App Router)
+- **Vercel** (Free tier hosting)
+- **Tailwind CSS**
+- **React** + **TypeScript**
+
+### Backend & Database
+- **Local JSON Storage** (No external database needed!)
+- **Next.js API Routes** (serverless functions)
+
+### Authentication
+- **NextAuth.js** with credentials provider
+
+### Real-time Updates
+- **Server-Sent Events (SSE)**
+- **Polling** as fallback
+- **Vercel KV Pub/Sub**
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Setup Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.local.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit `.env.local` and set a secret:
+```
+NEXTAUTH_SECRET=any-random-secret-string-here
+```
 
-## Learn More
+### 3. Run Development Server
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📁 Project Structure
 
-## Deploy on Vercel
+```
+circle13-sync/
+├── app/
+│   ├── api/
+│   │   ├── auth/
+│   │   │   ├── [...nextauth]/route.ts
+│   │   │   └── signup/route.ts
+│   │   ├── status/route.ts
+│   │   ├── tasks/route.ts
+│   │   ├── sync/route.ts
+│   │   └── events/route.ts
+│   ├── login/page.tsx
+│   ├── dashboard/page.tsx
+│   ├── layout.tsx
+│   ├── globals.css
+│   └── page.tsx
+├── components/
+│   ├── StatusCard.tsx
+│   ├── TaskList.tsx
+│   └── QuickSync.tsx
+├── lib/
+│   ├── db.ts
+│   ├── auth.ts
+│   └── store.ts
+├── hooks/
+│   └── useRealtime.ts
+└── schema.sql
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 💰 Cost: $0/month
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- ✅ Vercel Free Tier: Unlimited deployments
+- ✅ Local JSON Storage: No database costs!
+- ✅ GitHub: Free code hosting
+- ✅ No external services required!
+
+## 🔄 Deploy
+
+Push to GitHub and Vercel auto-deploys:
+
+```bash
+git push origin main
+```
+
+## 📝 License
+
+MIT
