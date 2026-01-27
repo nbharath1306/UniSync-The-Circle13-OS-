@@ -1,8 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'database.json');
+// In-memory database for serverless environments (Vercel compatible)
+// Note: Data resets on each cold start in production
 
 // Types
 export interface User {
@@ -64,49 +61,126 @@ export interface Database {
   };
 }
 
-const DEFAULT_DB: Database = {
-  users: [],
-  user_status: [],
-  tasks: [],
-  sync_requests: [],
-  _meta: {
-    next_user_id: 1,
-    next_task_id: 1,
-    next_sync_id: 1,
-  },
+// Demo password hash for "demo123" - generated with bcrypt
+// $2a$10$ prefix indicates bcrypt with cost factor 10
+const DEMO_PASSWORD_HASH = '$2a$10$K8Jh5BO1tMdDQMFRnE3Q8.hYwQ5Xr9mXl8EjZqFyOsDV1Zr7YXWMO';
+
+// Initial database with demo users
+const createInitialDB = (): Database => {
+  const now = new Date().toISOString();
+  return {
+    users: [
+      {
+        id: 1,
+        email: 'bharath@circle13.com',
+        password_hash: DEMO_PASSWORD_HASH,
+        full_name: 'Bharath',
+        section: '4H',
+        role: 'founder',
+        avatar_url: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: 2,
+        email: 'akhil@circle13.com',
+        password_hash: DEMO_PASSWORD_HASH,
+        full_name: 'Akhil',
+        section: '4L',
+        role: 'founder',
+        avatar_url: null,
+        created_at: now,
+        updated_at: now,
+      },
+    ],
+    user_status: [
+      {
+        user_id: 1,
+        status: 'free',
+        current_location: 'Library',
+        available_until: null,
+        last_updated: now,
+      },
+      {
+        user_id: 2,
+        status: 'in_class',
+        current_location: 'Room 301',
+        available_until: null,
+        last_updated: now,
+      },
+    ],
+    tasks: [
+      {
+        id: 1,
+        title: 'Complete MVP landing page',
+        description: 'Finish the hero section and feature highlights',
+        assigned_to: 1,
+        created_by: 2,
+        status: 'in_progress',
+        priority: 'high',
+        due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: 2,
+        title: 'Setup authentication',
+        description: 'Implement NextAuth with credentials',
+        assigned_to: 2,
+        created_by: 1,
+        status: 'done',
+        priority: 'urgent',
+        due_date: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: 3,
+        title: 'Design sync notification system',
+        description: null,
+        assigned_to: 1,
+        created_by: 1,
+        status: 'todo',
+        priority: 'medium',
+        due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: now,
+        updated_at: now,
+      },
+    ],
+    sync_requests: [],
+    _meta: {
+      next_user_id: 3,
+      next_task_id: 4,
+      next_sync_id: 1,
+    },
+  };
 };
 
-// Ensure data directory exists
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+// In-memory database instance
+let memoryDB: Database | null = null;
+
+// Get or initialize database
+function getDB(): Database {
+  if (!memoryDB) {
+    memoryDB = createInitialDB();
   }
+  return memoryDB;
 }
 
 // Read database
 export function readDB(): Database {
-  ensureDataDir();
-  try {
-    if (fs.existsSync(DB_FILE)) {
-      const data = fs.readFileSync(DB_FILE, 'utf-8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading database:', error);
-  }
-  return { ...DEFAULT_DB };
+  return getDB();
 }
 
-// Write database
+// Write database (updates in-memory)
 export function writeDB(db: Database): void {
-  ensureDataDir();
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+  memoryDB = db;
 }
 
 // User operations
 export function getUserByEmail(email: string): User | undefined {
   const db = readDB();
-  return db.users.find(u => u.email === email);
+  return db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
 }
 
 export function getUserById(id: number): User | undefined {
@@ -156,6 +230,18 @@ export function getTeamMembers(excludeUserId: number): Omit<User, 'password_hash
 export function getUserStatus(userId: number): UserStatus | undefined {
   const db = readDB();
   return db.user_status.find(s => s.user_id === userId);
+}
+
+export function getAllStatuses(): (UserStatus & { user_name: string; section: string })[] {
+  const db = readDB();
+  return db.user_status.map(status => {
+    const user = db.users.find(u => u.id === status.user_id);
+    return {
+      ...status,
+      user_name: user?.full_name || 'Unknown',
+      section: user?.section || '',
+    };
+  });
 }
 
 export function updateUserStatus(
